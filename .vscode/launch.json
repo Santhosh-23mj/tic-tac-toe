@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/bin/www",
+            "request": "launch",
+            "type": "node"
+        }
+    ]
+}
