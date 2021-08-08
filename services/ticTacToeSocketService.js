@@ -41,16 +41,17 @@ io.on("connection", (client) => {
 
             twoPlayersPlayingStatusUpdates(client.id, gameId);
             createRoomForTwoPlayersAndStart(gameId);
-        }
+        } else {
+            log(`GameId not supplied trying to match with existing players`);
 
-        log(`GameId not supplied trying to match with existing players`);
-
-        let playerMatched = matchPlayersAndStartGame(client.id);
-
-        // if no games are present create a new game and wait
-        if (!playerMatched) {
-            log(`No matching players found - Creating a new game`, "info");
-            createGame(client.id);
+            let playerMatched = matchPlayersAndStartGame(client.id);
+    
+            // if no games are present create a new game and wait
+            if (!playerMatched) {
+                log(`No matching players found - Creating a new game`, "info");
+                createGame(client.id);
+            }
+    
         }
     });
 
@@ -68,7 +69,7 @@ io.on("connection", (client) => {
 
             log(`Starting game with computer - ${computerId}`, "info");
 
-            io.sockets.connected[player1Id].join(gameId);
+            io.sockets.sockets.get(player1Id).join(gameId);
             io.to(gameId).emit("gameStarted", {
                 status: true,
                 gameId: gameId,
@@ -95,7 +96,7 @@ io.on("connection", (client) => {
         log(`Marking the board ${games[gameId].board} - ${markPosition}`);
         games[gameId].board[markPosition] = markingPlayerLetter;
 
-        let result = tictactoeService.verifyBoard(board);
+        let result = tictactoeService.verifyBoard(games[gameId].board);
         log(`Board evaluated ${games[gameId].board} - ${JSON.stringify(result)}`);
 
         log(`Checking if the opponent is computer`)
@@ -105,12 +106,12 @@ io.on("connection", (client) => {
             log(`Opponent is computer - ${computerPlayer} - Making a move`);
 
             const computerPlayerLetter = games[gameId][computerPlayer].letter;
-            const computerMove = tictactoeService.computerMove(board, computerPlayerLetter);
+            const computerMove = tictactoeService.computerMove(games[gameId].board, computerPlayerLetter);
 
             games[gameId].board[computerMove] = computerPlayerLetter;
             log(`Computer made a move - ${computerMove} - ${games[gameId].board}`);
 
-            result = tictactoeService.verifyBoard(board);
+            result = tictactoeService.verifyBoard(games[gameId].board);
             log(`Board evaluated ${games[gameId].board} - ${JSON.stringify(result)}`);
         }
 
@@ -121,7 +122,7 @@ io.on("connection", (client) => {
                 markingPlayerLetter == gameDataOnServer[player1Id].letter && !computerPlayer
                     ? player2Id
                     : player1Id;
-            
+
             io.to(gameId).emit("markBoardResponse", games[gameId]);
         }
 
@@ -158,8 +159,8 @@ io.on("connection", (client) => {
                 if (!gameSleepTime) {
                     clearInterval(gameSleepInterval);
 
-                    io.sockets.connected[player1Id].leave(gameId);
-                    io.sockets.connected[player2Id].leave(gameId);
+                    io.sockets.sockets.get(player1Id).leave(gameId);
+                    io.sockets.sockets.get(player2Id).leave(gameId);
                     delete games[gameId];
                     log(`Removed players from existing game - ${gameId}`);
 
@@ -179,9 +180,9 @@ io.on("connection", (client) => {
         const socketId = client.id;
 
         if (sockets[socketId]) {
-            log(`Found the players socketId - ${sockeId}`);
+            log(`Found the players socketId - ${socketId}`);
 
-            if (sockets[clientId].status == socketStatus.PLAYING) {
+            if (sockets[socketId].status == socketStatus.PLAYING) {
                 log(`The player is in a match - ${socketId}`);
 
                 io.to(sockets[socketId].gameId).emit("opponentLeft", {});
@@ -194,9 +195,8 @@ io.on("connection", (client) => {
                 players[player1].played--;
                 players[player2].played--;
 
-                io.sockets.connected[player1].leave(gameId);
-                io.sockets.connected[player2].leave(gameId);
-                log(`Removed both the players from the game - ${gameId}`);
+                io.sockets.sockets.get(stayingPlayer).leave(gameId);
+                log(`Removed the stayingPlayer from the game - ${gameId}`);
 
                 delete games[gameId];
 
@@ -277,8 +277,8 @@ function createRoomForTwoPlayersAndStart(gameId) {
     const player1Id = games[gameId].player1;
     const player2Id = games[gameId].player2;
 
-    io.sockets.connected[player1Id].join(gameId);
-    io.sockets.connected[player2Id].join(gameId);
+    io.sockets.sockets.get(player1Id).join(gameId);
+    io.sockets.sockets.get(player2Id).join(gameId);
 
     log(`Joined players ${player1Id}, ${player2Id} to ${gameId}`, "info");
 
@@ -332,11 +332,11 @@ function checkIfOpponentComputer(gameId) {
     const player1 = games[gameId].player1;
     const player2 = games[gameId].player2;
 
-    if (player1.match(/COMPUTER-.*{7}/)) {
+    if (player1.match(/COMPUTER\-.{11}/)) {
         return player1;
     }
 
-    if (player2.match(/COMPUTER-.*{7}/)) {
+    if (player2.match(/COMPUTER\-.{11}/)) {
         return player2;
     }
 
