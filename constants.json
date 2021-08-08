@@ -1,0 +1,25 @@
+{
+    "sockets": {
+        "status": {
+            "WAITING": "WAITING",
+            "MATCHING": "MATCHING",
+            "PLAYING": "PLAYING"
+        }
+    },
+
+    "games": {
+        "status": {
+            "ONGOING": "ONGOING",
+            "WON": "WON",
+            "TIE": "TIE"
+        },
+
+        "sign": {
+            "X": 1,
+            "O": 2
+        }
+    },
+
+    "GAME_ID_LENGTH": 5,
+    "COMPUTER_ID_LENGTH": 7
+}
