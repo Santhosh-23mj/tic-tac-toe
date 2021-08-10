@@ -195,23 +195,29 @@ io.on("connection", (client) => {
                 players[player1].played--;
                 players[player2].played--;
 
-                io.sockets.sockets.get(stayingPlayer).leave(gameId);
-                log(`Removed the stayingPlayer from the game - ${gameId}`);
+                const computerPlayer = checkIfOpponentComputer(gameId);
+                if (computerPlayer && (computerPlayer ==  stayingPlayer)) {
+                    delete players[computerPlayer];
+                    delete sockets[computerPlayer];
+                } else {
+                    io.sockets.sockets.get(stayingPlayer).leave(gameId);
+                    log(`Removed the stayingPlayer from the game - ${gameId}`);
+
+                    sockets[stayingPlayer].status = socketStatus.WAITING;
+                    sockets[stayingPlayer].gameId = null;
+    
+                    log(`Matching waiting player - ${stayingPlayer}`);
+    
+                    let playerMatched = matchPlayersAndStartGame(stayingPlayer);
+    
+                    if (!playerMatched) {
+                        log(`No match found creating a new game for - ${stayingPlayer}`);
+    
+                        createGame(stayingPlayer);
+                    }
+                }
 
                 delete games[gameId];
-
-                sockets[stayingPlayer].status = socketStatus.WAITING;
-                sockets[stayingPlayer].gameId = null;
-
-                log(`Matching waiting player - ${stayingPlayer}`);
-
-                let playerMatched = matchPlayersAndStartGame(stayingPlayer);
-
-                if (!playerMatched) {
-                    log(`No match found creating a new game for - ${stayingPlayer}`);
-
-                    createGame(stayingPlayer);
-                }
             }
         }
 
