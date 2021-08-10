@@ -1,8 +1,12 @@
 const http = require('http');
-const socketServer = require('socket.io').Server;
+const express = require('express');
+const path = require('path');
+const socketIo = require('socket.io');
 
-const httpServer = http.createServer();
-const io = new socketServer(httpServer);
+const app = express();
+const httpServer = http.createServer(app);
+const io = socketIo(httpServer);
+
 const port = normalizePort(process.env.PORT || '3000');
 
 httpServer.listen(port, () => {
@@ -10,7 +14,12 @@ httpServer.listen(port, () => {
 });
 httpServer.on('error', onError);
 
+app.use(express.static(path.join(__dirname, "public")))
+
 module.exports.io = io;
+
+// a bit of a hack load ticTacToeSocketService which will share io object
+require('./services/ticTacToeSocketService');
 
 //
 // Normalize port number to an Integer
