@@ -356,7 +356,7 @@ function getGameId() {
 // return a new game object
 function getNewGameObject(gameId, socketId) {
     let player1Info = players[socketId];
-    player1Info.letter = 1;
+    player1Info.letter = gameLetters.X;
 
     let newGameObject = {
         gameId: gameId,
