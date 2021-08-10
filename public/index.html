@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>TIC TAC TOE</title>
+    <script src="js/socket.io.js"></script>
+    <script>
+        const url = document.location.href;
+        const socket = io(url);
+        console.log(socket);
+        socket.on('connect', () => {
+            console.log(socket.id);
+        })
+        socket.emit('vsPlayer');
+    </script>
+</head>
+<body>
+
+</body>
+</html>
